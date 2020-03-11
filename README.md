@@ -32,11 +32,11 @@ makes chessboard.js flexible for handling a multitude of chess-related problems.
 This is a common source of confusion for new users. [remove?]
 
 Specifically, chessboard.js does not understand anything about how the game of
-chess is played: how a knight moves, who's turn is it, is White in check?, etc.
+chess is played: how a knight moves, whose turn is it, is White in check?, etc.
 
 Fortunately, the powerful [chess.js] library deals with exactly this sort of
 problem domain and plays nicely with chessboard.js's flexible API. Some examples
-of chessboard.js combined with chess.js: 5000, 5001, 5002
+of chessboard.js combined with chess.js: [Example 5000], [Example 5001], [Example 5002]
 
 Please see the powerful [chess.js] library for an API to deal with these sorts
 of questions.
@@ -62,12 +62,23 @@ independent of those other problems.
 - Docs - <http://chessboardjs.com/docs>
 - Examples - <http://chessboardjs.com/examples>
 
+## Developer Tools
+
+```sh
+# create a build in the build/ directory
+npm run build
+
+# re-build the website
+npm run website
+```
+
 ## License
 
-chessboard.js is released under the terms of the [MIT License].
+[MIT License](LICENSE.md)
 
 [jQuery]:https://jquery.com/
 [chessboardjs.com]:http://chessboardjs.com
 [chess.js]:https://github.com/jhlywa/chess.js
 [Example 5000]:http://chessboardjs.com/examples#5000
-[MIT License]:LICENSE.md
+[Example 5001]:http://chessboardjs.com/examples#5001
+[Example 5002]:http://chessboardjs.com/examples#5002

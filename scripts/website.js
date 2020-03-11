@@ -1,14 +1,24 @@
 // -----------------------------------------------------------------------------
-// This files builds the .html files in the website/ folder
+// This file builds the contents of the website/ folder.
 // -----------------------------------------------------------------------------
 
 // libraries
-const fs = require('fs')
+const fs = require('fs-plus')
 const kidif = require('kidif')
 const mustache = require('mustache')
-const docs = require('./data/docs.json')
+const docs = require('../data/docs.json')
 
 const encoding = {encoding: 'utf8'}
+
+// toggle development version
+const useDevFile = false
+const jsCDNLink = '<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>'
+const cssCDNLink = 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css'
+
+let chessboardJsScript = jsCDNLink
+if (useDevFile) {
+  chessboardJsScript = '<script src="js/chessboard.js"></script>'
+}
 
 // grab some mustache templates
 const docsTemplate = fs.readFileSync('templates/docs.mustache', encoding)
@@ -16,15 +26,19 @@ const downloadTemplate = fs.readFileSync('templates/download.mustache', encoding
 const examplesTemplate = fs.readFileSync('templates/examples.mustache', encoding)
 const homepageTemplate = fs.readFileSync('templates/homepage.mustache', encoding)
 const singleExampleTemplate = fs.readFileSync('templates/single-example.mustache', encoding)
+const licensePageTemplate = fs.readFileSync('templates/license.mustache', encoding)
 const headTemplate = fs.readFileSync('templates/_head.mustache', encoding)
 const headerTemplate = fs.readFileSync('templates/_header.mustache', encoding)
 const footerTemplate = fs.readFileSync('templates/_footer.mustache', encoding)
 
-const latestChessboardJS = fs.readFileSync('src/chessboard.js', encoding)
-const latestChessboardCSS = fs.readFileSync('src/chessboard.css', encoding)
+const latestChessboardJS = fs.readFileSync('lib/chessboard.js', encoding)
+const latestChessboardCSS = fs.readFileSync('lib/chessboard.css', encoding)
 
 // grab the examples
 const examplesArr = kidif('examples/*.example')
+console.assert(examplesArr, 'Could not load the Example files')
+console.assert(examplesArr.length > 1, 'Zero examples loaded')
+
 const examplesObj = examplesArr.reduce(function (examplesObj, example, idx) {
   examplesObj[example.id] = example
   return examplesObj
@@ -74,9 +88,10 @@ function writeHomepage () {
   const headHTML = mustache.render(headTemplate, {pageTitle: 'Homepage'})
 
   const html = mustache.render(homepageTemplate, {
+    chessboardJsScript: chessboardJsScript,
+    example2: homepageExample2,
     footer: footerTemplate,
-    head: headHTML,
-    example2: homepageExample2
+    head: headHTML
   })
   fs.writeFileSync('website/index.html', html, encoding)
 }
@@ -86,6 +101,7 @@ function writeExamplesPage () {
   const headerHTML = mustache.render(headerTemplate, {examplesActive: true})
 
   const html = mustache.render(examplesTemplate, {
+    chessboardJsScript: chessboardJsScript,
     examplesJavaScript: buildExamplesJS(),
     footer: footerTemplate,
     head: headHTML,
@@ -109,6 +125,23 @@ const errorRowsHTML = docs.errors.reduce(function (html, itm) {
   if (isString(itm)) return html
   return html + buildErrorRowHTML(itm)
 }, '')
+
+function isIntegrationExample (example) {
+  return (example.id + '').startsWith('5')
+}
+
+function writeSingleExamplePage (example) {
+  if (isIntegrationExample(example)) {
+    example.includeChessJS = true
+  }
+  example.chessboardJsScript = chessboardJsScript
+  const html = mustache.render(singleExampleTemplate, example)
+  fs.writeFileSync('website/examples/' + example.id + '.html', html, encoding)
+}
+
+function writeSingleExamplesPages () {
+  examplesArr.forEach(writeSingleExamplePage)
+}
 
 function writeDocsPage () {
   const headHTML = mustache.render(headTemplate, {pageTitle: 'Documentation'})
@@ -137,12 +170,19 @@ function writeDownloadPage () {
   fs.writeFileSync('website/download.html', html, encoding)
 }
 
+function writeLicensePage () {
+  const html = mustache.render(licensePageTemplate)
+  fs.writeFileSync('website/license.html', html, encoding)
+}
+
 function writeWebsite () {
   writeSrcFiles()
   writeHomepage()
   writeExamplesPage()
+  writeSingleExamplesPages()
   writeDocsPage()
   writeDownloadPage()
+  writeLicensePage()
 }
 
 writeWebsite()
@@ -153,13 +193,13 @@ writeWebsite()
 
 function htmlEscape (str) {
   return (str + '')
-           .replace(/&/g, '&amp;')
-           .replace(/</g, '&lt;')
-           .replace(/>/g, '&gt;')
-           .replace(/"/g, '&quot;')
-           .replace(/'/g, '&#39;')
-           .replace(/\//g, '&#x2F;')
-           .replace(/`/g, '&#x60;')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/\//g, '&#x2F;')
+    .replace(/`/g, '&#x60;')
 }
 
 function buildExampleGroupHTML (idx, groupName, examplesInGroup) {
